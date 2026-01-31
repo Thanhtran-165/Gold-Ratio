@@ -1,9 +1,23 @@
 import { AppShell } from '@/components/AppShell';
+import { headers } from 'next/headers';
+
+function getRequestBaseUrl(): string | null {
+  try {
+    const h = headers();
+    const host = h.get('x-forwarded-host') ?? h.get('host');
+    if (!host) return null;
+    const proto = h.get('x-forwarded-proto') ?? 'http';
+    return `${proto}://${host}`;
+  } catch {
+    return null;
+  }
+}
 
 async function getInitialQuotes() {
   try {
     const fredApiKey = process.env.FRED_API_KEY;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || getRequestBaseUrl();
+    if (!baseUrl) return null;
 
     const response = await fetch(`${baseUrl}/api/quotes`, {
       headers: fredApiKey ? { 'x-fred-api-key': fredApiKey } : {},
